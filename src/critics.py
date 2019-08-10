@@ -1,4 +1,5 @@
 import tensorflow as tf
+import utils
 
 
 class FCCritic:
@@ -53,14 +54,20 @@ class DCGANCritic:
         with tf.variable_scope("Critic", reuse=reuse):
             kwargs = {"kernel_size": (5, 5), "strides": (2, 2), "padding": "same", "activation": tf.nn.relu}
 
-            image = tf.layers.conv2d(image, filters=64, **kwargs)
-            image = tf.layers.conv2d(image, filters=128, **kwargs)
-            image = tf.layers.conv2d(image, filters=256, **kwargs)
-            image = tf.layers.conv2d(image, filters=1024, **kwargs)
-            image = tf.reshape(image, [-1, 4 * 4 * 1024])
-            image = tf.layers.dense(image, 1)
-            return image
-
+            h0 = tf.layers.conv2d(image, filters=64,"kernel_size": (4, 89), "strides": (2, 2), "padding": "valid", activation=act)
+            h1 = tf.layers.conv2d(h0, filters=64,"kernel_size": (4, 1), "strides": (2, 2), "padding": "valid", activation=act)
+            h2 = tf.layers.conv2d(h1, filters=64,"kernel_size": (4, 1), "strides": (2, 2), "padding": "valid", activation=act)
+            h3 = tf.reshape(h2, [image.shape[0],-1])
+            h4 = tf.layers.dense(h3, 1)
+           
+            # image = tf.layers.conv2d(image, filters=64, **kwargs)
+            # image = tf.layers.conv2d(image, filters=128, **kwargs)
+            # image = tf.layers.conv2d(image, filters=256, **kwargs)
+            # image = tf.layers.conv2d(image, filters=1024, **kwargs)
+            # image = tf.reshape(image, [-1, 4 * 4 * 1024])
+            # image = tf.layers.dense(image, 1)
+            # return image
+            return h4
 
 class ConvCritic:
     def __init__(self, img_size, channels):
@@ -71,12 +78,14 @@ class ConvCritic:
         """
         pass
 
+    
     def __call__(self, image, reuse=None):
-        
+
         with tf.variable_scope("Critic", reuse=reuse):
-            act = tf.nn.relu
+            act = tf.nn.leaky_relu
             pad1 = [[0, 0], [1, 1], [1, 1], [0, 0]]
 
+            
             kwargs3 = {"kernel_size": (3, 3), "strides": (1, 1), "padding": "valid"}
             kwargs4 = {"kernel_size": (4, 4), "strides": (4, 4), "padding": "valid"}
 

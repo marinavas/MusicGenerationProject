@@ -65,14 +65,20 @@ class DCGANGenerator:
     def __init__(self, img_size, channels):
         self.channels = channels
 
-    def __call__(self, z):
+    def __call__(self, z, prev_x):
         """
 
         :param z:
         :return: returns tensor of shape [batch_size, 64, 64, channels]
         """
         with tf.variable_scope("Generator"):
-            act = tf.nn.relu
+            act = tf.nn.leaky_relu
+
+
+            h0 = tf.layers.conv2d(prev_x, filters=16, (1,128))
+            h1 = tf.layers.conv2d(h0, filters=16, (2,2),)
+            h2 = tf.layers.conv2d(h1, filters=16, (2,2),)
+            h3 = tf.layers.conv2d(h2, filters=16, (2,2),)
 
             z = tf.layers.dense(z, 32768, activation=act)
             z = tf.reshape(z, [-1, 4, 4, 2048])
