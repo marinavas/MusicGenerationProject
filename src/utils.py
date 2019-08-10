@@ -1,5 +1,7 @@
 import os
+import tensorflow as tf
 from time import time
+
 
 
 class ProjectPath:
@@ -22,3 +24,4 @@ class Timer:
         diff = time() - self.curr_time
         self.curr_time = time()
         return diff
+

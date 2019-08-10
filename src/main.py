@@ -6,9 +6,9 @@ from critics import *
 dataset = PianoRollData(img_size=64)
 # dataset = MNISTData()
 
-generator = FCGenerator(img_size=dataset.img_size,
+generator = DCGANGenerator(img_size=dataset.img_size,
                         channels=dataset.channels)
-critic = FCCritic(img_size=dataset.img_size,
+critic = DCGANCritic(img_size=dataset.img_size,
                   channels=dataset.channels)
 
 wgan = WGAN(generator=generator,
