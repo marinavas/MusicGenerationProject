@@ -74,19 +74,24 @@ class DCGANGenerator:
         with tf.variable_scope("Generator"):
             act = tf.nn.leaky_relu
 
+            h0 = tf.layers.conv2d(prev_x, filters=16, kernel_size = (1, 128), strides = (2, 2), padding= valid, activation=act)
+            h1 = tf.layers.conv2d(h0, filters=16, kernel_size = (2, 2), strides = (2, 2), padding= valid, activation=act)
+            h2 = tf.layers.conv2d(h1, filters=16, kernel_size = (2, 2), strides = (2, 2), padding= valid, activation=act)
+            h3 = tf.layers.conv2d(h2, filters=16, kernel_size = (2, 2), strides = (2, 2), padding= valid, activation=act)
+            h4 = tf.layers.dense(h3, 1)
 
-            h0 = tf.layers.conv2d(prev_x, filters=16, (1,128))
-            h1 = tf.layers.conv2d(h0, filters=16, (2,2),)
-            h2 = tf.layers.conv2d(h1, filters=16, (2,2),)
-            h3 = tf.layers.conv2d(h2, filters=16, (2,2),)
+            z = tf.layers.dense(z, 1024, activation=act)
+            z = tf.layers.dense(z, 256, activation=act)
+            z = tf.reshape(z, [-1, 2, 1, 128])
+            z = tf.concat(z, h4)
 
-            z = tf.layers.dense(z, 32768, activation=act)
-            z = tf.reshape(z, [-1, 4, 4, 2048])
+            kwargs = {"kernel_size": (2, 1), "strides": (2, 2), "padding": "valid"}
 
-            kwargs = {"kernel_size": (5, 5), "strides": (2, 2), "padding": "same"}
-
-            z = tf.layers.conv2d_transpose(z, filters=512, activation=act, **kwargs)
-            z = tf.layers.conv2d_transpose(z, filters=256, activation=act, **kwargs)
-            z = tf.layers.conv2d_transpose(z, filters=128, activation=act, **kwargs)
-            z = tf.layers.conv2d_transpose(z, filters=self.channels, activation=tf.nn.sigmoid, **kwargs)
+            z = tf.layers.conv2d_transpose(z, output_shape =(4,1) , activation=act, **kwargs)
+            z = tf.concat(z, h2)
+            z = tf.layers.conv2d_transpose(z, output_shape =(8,1), activation=act, **kwargs)
+            z = tf.concat(z, h1)
+            z = tf.layers.conv2d_transpose(z, output_shape =(16,1), activation=act, **kwargs)
+            z = tf.concat(z, h0)
+            z = tf.layers.conv2d_transpose(z, output_shape =(16,128), activation=tf.nn.sigmoid, kernel_size = (1, 128), strides = (1, 2))
             return z

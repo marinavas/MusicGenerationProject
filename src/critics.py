@@ -52,11 +52,11 @@ class DCGANCritic:
         :return:
         """
         with tf.variable_scope("Critic", reuse=reuse):
-            kwargs = {"kernel_size": (5, 5), "strides": (2, 2), "padding": "same", "activation": tf.nn.relu}
-
-            h0 = tf.layers.conv2d(image, filters=64,"kernel_size": (4, 89), "strides": (2, 2), "padding": "valid", activation=act)
-            h1 = tf.layers.conv2d(h0, filters=64,"kernel_size": (4, 1), "strides": (2, 2), "padding": "valid", activation=act)
-            h2 = tf.layers.conv2d(h1, filters=64,"kernel_size": (4, 1), "strides": (2, 2), "padding": "valid", activation=act)
+            #kwargs = {"kernel_size": (5, 5), "strides": (2, 2), "padding": "same", "activation": tf.nn.relu}
+            act = tf.nn.leaky_relu
+            h0 = tf.layers.conv2d(image, filters=64, kernel_size =(4, 89),  strides =(2, 2), padding= valid, activation=act)
+            h1 = tf.layers.conv2d(h0, filters=64, kernel_size =(4, 1),  strides =(2, 2), padding= valid, activation=act)
+            h2 = tf.layers.conv2d(h1, filters=64, kernel_size =(4, 1),  strides =(2, 2), padding= valid, activation=act)
             h3 = tf.reshape(h2, [image.shape[0],-1])
             h4 = tf.layers.dense(h3, 1)
            
