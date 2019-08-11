@@ -166,14 +166,14 @@ class WGAN:
 
             timer = Timer()
             
-            for epoche in range(self.epoches):
-                print(epoche, end=" ")
+            for step in range(self.epoches):
+                print(step, end=" ")
                 sys.stdout.flush()
                
-                self.one_step(sess, batch_size, epoche)
+                self.one_step(sess, batch_size, step)
 
-                if epoche % 10 == 0:
-                    self.add_summary(sess, epoche, writer, timer)
+                if step % 10 == 0:
+                    self.add_summary(sess, step, writer, timer)
                     saver.save(sess, model_path)
 
 
@@ -191,29 +191,32 @@ class WGAN:
         
         ##############################################
         
-        batch_num = len(self.dataset.x) // batch_size
-        for idx in range(batch_num):
-            batch_images = self.dataset.x[idx*batch_size:(idx+1)*batch_size]
-            eta = np.random.rand(batch_size, 1, 1, 1)
-            prev_batch_images =self.dataset.prev_x[idx*batch_size:(idx+1)*batch_size]
-            batch_z = np.random.normal(0, 1, [batch_size, self.z_size]) \
-                        .astype(np.float32)
-            
+        #batch_num = len(self.dataset.x) // batch_size
 
-            if(step<25):
-                c_times = 100
-            else
-                c_times = 5
+        #for idx in range(batch_num):
+       # batch_images, prev_batch_images = self.dataset.next_batch_real(batch_size)
+        eta = np.random.rand(batch_size, 1, 1, 1)
+      #  prev_batch_images =self.dataset.prev_x[idx*batch_size:(idx+1)*batch_size]
+        batch_z = np.random.normal(0, 1, [batch_size, self.z_size]) \
+                    .astype(np.float32)
+        
+
+        if(step<25):
+            c_times = 100
+        else:
+            c_times = 5
+        
+        for _ in range(c_times):
             
-            for _ in range(c_times)
-                sess.run(self.c_optimizer, feed_dict={
-                        self.real_image: batch_images, self.z: batch_z, self.eta: eta,self.prev_image: prev_batch_images})
-                        
-            batch_z = np.random.normal(0, 1, [batch_size, self.z_size]) \
-                           .astype(np.float32)
-            
-            sess.run(self.g_optimizer,
-                    feed_dict={ self.real_image: batch_images, self.z: batch_z, self.prev_image: prev_batch_images})
+            batch_images, prev_batch_images = self.dataset.next_batch_real(batch_size)
+            sess.run(self.c_optimizer, feed_dict={
+                    self.real_image: batch_images, self.z: batch_z, self.eta: eta,self.prev_image: prev_batch_images})
+                    
+        batch_z = np.random.normal(0, 1, [batch_size, self.z_size]) \
+                        .astype(np.float32)
+        
+        sess.run(self.g_optimizer,
+                feed_dict={ self.real_image: batch_images, self.z: batch_z, self.prev_image: prev_batch_images})
 
             
 

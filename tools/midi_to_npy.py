@@ -25,14 +25,12 @@ for file in os.listdir('data\Data_abc\Midi'):
 
         
         piano = np.zeros((128,piano_roll.shape[1]+16))
-        np.save("data/results/res1.npy",piano_roll)
-        piano[:,16:] = piano_roll
-
-       
-        i+=1
+        #np.save("data/results/res1.npy",piano_roll)
+        piano[:,16:] = piano_roll/127
+        piano = np.ceil(piano)
         
-        if(i%10 == 0):
-                print(i)
+        
+       
 
         for w in range(0,piano_roll.shape[1]-16,16): 
                 #print(piano.shape)
@@ -47,5 +45,5 @@ np.save("data/data_x.npy",data_x)
 np.save("data/data_prev.npy",data_prev)
 
 print(data_x.shape)
-        
+print(np.max(piano))
 
