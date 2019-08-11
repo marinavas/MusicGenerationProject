@@ -14,6 +14,7 @@ class WGAN:
                  critic,
                  dataset,
                  z_size,
+                 epoches,
                  optimizer=tf.train.AdamOptimizer(learning_rate=0.0001, beta1=0.5, beta2=0.9)):
         """
         Definition of the Wasserstein GAN with Gradient Penalty (WGAN-GP)
@@ -36,9 +37,10 @@ class WGAN:
         self.z = tf.placeholder(tf.float32, [None, self.z_size], name="Z")
         # image shape is [batch_size, height, width, channels]
         self.real_image = tf.placeholder(tf.float32,
-                                         [None, self.dataset.img_size,
-                                             self.dataset.img_size, self.dataset.channels],
+                                         [None, dataset.img_size[0],
+                                             dataset.img_size[1], self.dataset.channels],
                                          name="Real_image")
+        
         """
         ##################################################################
         
@@ -51,7 +53,8 @@ class WGAN:
         
         ##################################################################
         """
-        self.fake_image = self.generator(self.z)
+
+        self.fake_image = self.generator(self.z, self.real_image)
 
         self.c_real = self.critic(self.real_image)
         self.c_fake = self.critic(self.fake_image, reuse=True)
@@ -192,7 +195,7 @@ class WGAN:
         for _ in range(c_times):
             # sampling from uniform distribution
             eta = np.random.rand(batch_size, 1, 1, 1)
-            data_batch = self.dataset.next_batch_real(batch_size)
+            data_batch, data_batch_prev = self.dataset.next_batch_real(batch_size)
             z = self.dataset.next_batch_fake(batch_size, self.z_size)
 
             sess.run(self.c_optimizer, feed_dict={
@@ -218,7 +221,7 @@ class WGAN:
         :param timer:
         :return:
         """
-        data_batch = self.dataset.next_batch_real(WGAN.max_summary_images)
+        data_batch, data_batch_prev = self.dataset.next_batch_real(WGAN.max_summary_images)
         z = self.dataset.next_batch_fake(WGAN.max_summary_images, self.z_size)
         eta = np.random.rand(WGAN.max_summary_images, 1, 1, 1)
 

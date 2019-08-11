@@ -34,7 +34,7 @@ class FCCritic:
 
 
 class DCGANCritic:
-    def __init__(self, img_size, channels):
+    def __init__(self, img_size, channels, image):
         """
         DCGAN is only defined for 64x64 images, it takes the img_size and channels here only not to break the interface
 

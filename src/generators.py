@@ -62,7 +62,7 @@ class ConvGenerator:
 
 
 class DCGANGenerator:
-    def __init__(self, img_size, channels):
+    def __init__(self, img_size, channels, prev_x):
         self.channels = channels
 
     def __call__(self, z, prev_x):
@@ -73,17 +73,20 @@ class DCGANGenerator:
         """
         with tf.variable_scope("Generator"):
             act = tf.nn.leaky_relu
-
-            h0 = tf.layers.conv2d(prev_x, filters=16, kernel_size = (1, 128), strides = (2, 2), padding= valid, activation=act)
-            h1 = tf.layers.conv2d(h0, filters=16, kernel_size = (2, 2), strides = (2, 2), padding= valid, activation=act)
-            h2 = tf.layers.conv2d(h1, filters=16, kernel_size = (2, 2), strides = (2, 2), padding= valid, activation=act)
-            h3 = tf.layers.conv2d(h2, filters=16, kernel_size = (2, 2), strides = (2, 2), padding= valid, activation=act)
-            h4 = tf.layers.dense(h3, 1)
-
+            print(prev_x.shape)
+            h0 = tf.layers.conv2d(prev_x, filters=16, kernel_size = (1, 128), strides = (1, 2), padding= 'valid', activation=act)
+            print(h0.shape)
+            h1 = tf.layers.conv2d(h0, filters=16, kernel_size = (2, 1), strides = (2, 2), padding= 'valid', activation=act)
+            h2 = tf.layers.conv2d(h1, filters=16, kernel_size = (2, 1), strides = (2, 2), padding= 'valid', activation=act)
+            h3 = tf.layers.conv2d(h2, filters=16, kernel_size = (2, 1), strides = (2, 2), padding= 'valid', activation=act)
+            #h4 = tf.layers.dense(h3, 1)
+           
+            
             z = tf.layers.dense(z, 1024, activation=act)
             z = tf.layers.dense(z, 256, activation=act)
             z = tf.reshape(z, [-1, 2, 1, 128])
-            z = tf.concat(z, h4)
+            print(z.shape, h3.shape)
+            z = tf.concat(3, [z, h3*tf.ones([z.shape[0], z.shape[1], z.shape[2], h3.shape[3]])])
 
             kwargs = {"kernel_size": (2, 1), "strides": (2, 2), "padding": "valid"}
 
