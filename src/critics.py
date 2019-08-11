@@ -54,11 +54,12 @@ class DCGANCritic:
         with tf.variable_scope("Critic", reuse=reuse):
             #kwargs = {"kernel_size": (5, 5), "strides": (2, 2), "padding": "same", "activation": tf.nn.relu}
             act = tf.nn.leaky_relu
-            h0 = tf.layers.conv2d(image, filters=64, kernel_size =(4, 89),  strides =(2, 2), padding= valid, activation=act)
-            h1 = tf.layers.conv2d(h0, filters=64, kernel_size =(4, 1),  strides =(2, 2), padding= valid, activation=act)
-            h2 = tf.layers.conv2d(h1, filters=64, kernel_size =(4, 1),  strides =(2, 2), padding= valid, activation=act)
-            h3 = tf.reshape(h2, [image.shape[0],-1])
-            h4 = tf.layers.dense(h3, 1)
+            h0 = tf.layers.conv2d(image, filters=16, kernel_size =(1, 128),  strides =(1, 2), padding= 'valid', activation=act)
+            h1 = tf.layers.conv2d(h0, filters=16, kernel_size =(2, 1),  strides =(2, 2), padding= 'valid', activation=act)
+            h2 = tf.layers.conv2d(h1, filters=16, kernel_size =(2, 1),  strides =(2, 2), padding= 'valid', activation=act)
+            #h3 = tf.layers.conv2d(h2, filters=16, kernel_size =(2, 1),  strides =(2, 2), padding= 'valid', activation=act)
+            h2 = tf.layers.flatten(h2)
+            h3 = tf.layers.dense(h2, 1)
            
             # image = tf.layers.conv2d(image, filters=64, **kwargs)
             # image = tf.layers.conv2d(image, filters=128, **kwargs)
@@ -67,7 +68,7 @@ class DCGANCritic:
             # image = tf.reshape(image, [-1, 4 * 4 * 1024])
             # image = tf.layers.dense(image, 1)
             # return image
-            return h4
+            return h3
 
 class ConvCritic:
     def __init__(self, img_size, channels):

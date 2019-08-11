@@ -76,6 +76,8 @@ class DCGANGenerator:
             print(prev_x.shape)
             h0 = tf.layers.conv2d(prev_x, filters=16, kernel_size = (1, 128), strides = (1, 2), padding= 'valid', activation=act)
             print(h0.shape)
+            h0 = tf.reshape(h0, [64, h0.shape[1], h0.shape[2], h0.shape[3]])
+            #h0 = tf.reshape(h0,[64,h0.shape[0]])
             h1 = tf.layers.conv2d(h0, filters=16, kernel_size = (2, 1), strides = (2, 2), padding= 'valid', activation=act)
             h2 = tf.layers.conv2d(h1, filters=16, kernel_size = (2, 1), strides = (2, 2), padding= 'valid', activation=act)
             h3 = tf.layers.conv2d(h2, filters=16, kernel_size = (2, 1), strides = (2, 2), padding= 'valid', activation=act)
@@ -84,17 +86,18 @@ class DCGANGenerator:
             
             z = tf.layers.dense(z, 1024, activation=act)
             z = tf.layers.dense(z, 256, activation=act)
-            z = tf.reshape(z, [-1, 2, 1, 128])
+            z = tf.reshape(z, [64, 2, 1, 128])
             print(z.shape, h3.shape)
-            z = tf.concat(3, [z, h3*tf.ones([z.shape[0], z.shape[1], z.shape[2], h3.shape[3]])])
+            #z = tf.concat(3, [z, h3*tf.ones([z.shape[0], z.shape[1], z.shape[2], h3.shape[3]])])
+            z = tf.concat([z,h3],axis=3)
+            print(z.shape)
+            kwargs = {"kernel_size": (2, 1), "strides": (2, 1), "padding": "valid"}
 
-            kwargs = {"kernel_size": (2, 1), "strides": (2, 2), "padding": "valid"}
-
-            z = tf.layers.conv2d_transpose(z, output_shape =(4,1) , activation=act, **kwargs)
-            z = tf.concat(z, h2)
-            z = tf.layers.conv2d_transpose(z, output_shape =(8,1), activation=act, **kwargs)
-            z = tf.concat(z, h1)
-            z = tf.layers.conv2d_transpose(z, output_shape =(16,1), activation=act, **kwargs)
-            z = tf.concat(z, h0)
-            z = tf.layers.conv2d_transpose(z, output_shape =(16,128), activation=tf.nn.sigmoid, kernel_size = (1, 128), strides = (1, 2))
+            z = tf.layers.conv2d_transpose(z , filters = 128, activation=act, **kwargs)
+            z = tf.concat([z,h2],axis=3)
+            z = tf.layers.conv2d_transpose(z, filters = 128, activation=act, **kwargs)
+            z = tf.concat([z,h1],axis=3)
+            z = tf.layers.conv2d_transpose(z, filters = 128, activation=act, **kwargs)
+            z = tf.concat([z,h0],axis=3)
+            z = tf.layers.conv2d_transpose(z, filters = 1, activation=tf.nn.sigmoid, kernel_size = (1, 128), strides = (1, 2))
             return z

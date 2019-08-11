@@ -34,6 +34,7 @@ class PianoRollData(DataSet):
         self.channels = 1
         #last_batch = 0
         #images_folder_path = os.path.join(project_path.base, "data", "Data64")
+        #print(os.getcwd())
         self.x = np.load('data/data_x.npy')
         self.prev_x = np.load('data/data_prev.npy')
 
@@ -44,6 +45,7 @@ class PianoRollData(DataSet):
         self.num_examples = len(self.x)
         print("Done")
 
+    
     def next_batch_real(self, batch_size):
         locations = np.random.randint(0, self.num_examples, batch_size)
         #print(locations)

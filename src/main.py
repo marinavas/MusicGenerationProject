@@ -14,7 +14,7 @@ critic = DCGANCritic(img_size=dataset.img_size,
 wgan = WGAN(generator=generator,
             critic=critic,
             dataset=dataset,
-            epoches = 10,
+            epoches = 1000,
             z_size=100)
 
-wgan(batch_size =64, epoches = 10, model_path=project_path.model_path)
+wgan(batch_size =64, model_path=project_path.model_path)

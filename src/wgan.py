@@ -28,7 +28,7 @@ class WGAN:
 
         self.generator = generator
         self.critic = critic
-
+        self.epoches = epoches
         self.optimizer = optimizer
         self.z_size = z_size
         self.dataset = dataset
@@ -41,6 +41,10 @@ class WGAN:
                                              dataset.img_size[1], self.dataset.channels],
                                          name="Real_image")
         
+        self.prev_image = tf.placeholder(tf.float32,
+                                         [None, dataset.img_size[0],
+                                             dataset.img_size[1], self.dataset.channels],
+                                         name="Prev_image")
         """
         ##################################################################
         
@@ -54,7 +58,7 @@ class WGAN:
         ##################################################################
         """
 
-        self.fake_image = self.generator(self.z, self.real_image)
+        self.fake_image = self.generator(self.z, self.prev_image)
 
         self.c_real = self.critic(self.real_image)
         self.c_fake = self.critic(self.fake_image, reuse=True)
@@ -63,6 +67,10 @@ class WGAN:
         self.g_cost = tf.reduce_mean(self.c_fake)
         # Tries to minimize the score for real images and maximize for fake
         self.c_cost = tf.reduce_mean(self.c_real - self.c_fake)
+
+        #self.d_sum = tf.summary.histogram("d", self.D)
+        #self.d__sum = tf.summary.histogram("d_", self.D_)
+        #self.G_sum = tf.summary.image("G", self.G)
 
         """   
         ##################################################################
@@ -113,13 +121,11 @@ class WGAN:
         self.g_optimizer = self.optimizer.minimize(
             self.g_cost, var_list=g_variables, name="Generator_optimizer")
 
-        """   
-        ##################################################################
-        
-        YOUR CODE END.
+        print(g_variables)
 
-        ##################################################################
-        """
+        
+
+        
 
         # Defining summaries for tensorflow until the end of the method
         tf.summary.image("Generated image", self.fake_image,
@@ -142,7 +148,7 @@ class WGAN:
 
         self.merged = tf.summary.merge_all()
 
-    def __call__(self, batch_size, steps, model_path):
+    def __call__(self, batch_size, model_path):
         """
         Trains the neural network by calling the .one_step() method "steps" number of times.
         Adds a Tensorboard summary every 100 steps
@@ -151,21 +157,27 @@ class WGAN:
         :param steps:
         :param model_path: location of the model on the filesystem
         """
+
+
         with tf.Session() as sess:
             writer = tf.summary.FileWriter(model_path, sess.graph)
             tf.global_variables_initializer().run()
             saver = tf.train.Saver()
 
             timer = Timer()
-            for step in range(steps):
-                print(step, end=" ")
+            
+            for epoche in range(self.epoches):
+                print(epoche, end=" ")
                 sys.stdout.flush()
+               
+                self.one_step(sess, batch_size, epoche)
 
-                self.one_step(sess, batch_size, step)
-
-                if step % 100 == 0:
-                    self.add_summary(sess, step, writer, timer)
+                if epoche % 10 == 0:
+                    self.add_summary(sess, epoche, writer, timer)
                     saver.save(sess, model_path)
+
+
+            
 
     def one_step(self, sess, batch_size, step):
         """
@@ -176,57 +188,76 @@ class WGAN:
         :param batch_size:
         :param step: current step, used for determining how much the critic should be updated
         """
-        """
-        ##################################################################
-
-        TODO: Devise an updating scheme for the critic and the generator. 
-        Hint: the critic should always be trained more than the generator.
         
-        YOUR CODE BEGIN.
+        ##############################################
         
-        ##################################################################
-        """
-
-        if step < 25:
-            c_times = 100
-        else:
-            c_times = 5
-
-        for _ in range(c_times):
-            # sampling from uniform distribution
+        batch_num = len(self.dataset.x) // batch_size
+        for idx in range(batch_num):
+            batch_images = self.dataset.x[idx*batch_size:(idx+1)*batch_size]
             eta = np.random.rand(batch_size, 1, 1, 1)
-            data_batch, data_batch_prev = self.dataset.next_batch_real(batch_size)
-            z = self.dataset.next_batch_fake(batch_size, self.z_size)
+            prev_batch_images =self.dataset.prev_x[idx*batch_size:(idx+1)*batch_size]
+            batch_z = np.random.normal(0, 1, [batch_size, self.z_size]) \
+                        .astype(np.float32)
+            
 
-            sess.run(self.c_optimizer, feed_dict={
-                     self.real_image: data_batch, self.z: z, self.eta: eta})
+            if(step<25):
+                c_times = 100
+            else
+                c_times = 5
+            
+            for _ in range(c_times)
+                sess.run(self.c_optimizer, feed_dict={
+                        self.real_image: batch_images, self.z: batch_z, self.eta: eta,self.prev_image: prev_batch_images})
+                        
+            batch_z = np.random.normal(0, 1, [batch_size, self.z_size]) \
+                           .astype(np.float32)
+            
+            sess.run(self.g_optimizer,
+                    feed_dict={ self.real_image: batch_images, self.z: batch_z, self.prev_image: prev_batch_images})
 
-        z = self.dataset.next_batch_fake(batch_size, self.z_size)
-        sess.run(self.g_optimizer, feed_dict={self.z: z})
+            
+
+        # for _ in range(c_times):
+        #     # sampling from niform distribution
+        #     eta = np.random.rand(batch_size, 1, 1, 1)
+        #     data_batch, data_batch_prev = self.dataset.next_batch_real(batch_size)
+        #     z = self.dataset.next_batch_fake(batch_size, self.z_size)
+
+        #     sess.run(self.c_optimizer, feed_dict={
+        #              self.real_image: data_batch, self.z: z, self.eta: eta})
+
+        # z = self.dataset.next_batch_fake(batch_size, self.z_size)
+        # sess.run(self.g_optimizer, feed_dict={self.z: z})
 
         """
-        ##################################################################
-        YOUR CODE END. 
-        ##################################################################
-        """
+    #     ##################################################################
+    #     YOUR CODE END. 
+    #     ##################################################################
+    #     """
 
     def add_summary(self, sess, step, writer, timer):
-        """
-        Adds a summary for the specified step in Tensorboard
-        Tries to reconstruct new samples from dataset
+    #     """
+    #     Adds a summary for the specified step in Tensorboard
+    #     Tries to reconstruct new samples from dataset
 
-        :param sess:
-        :param step:
-        :param writer:
-        :param timer:
-        :return:
-        """
-        data_batch, data_batch_prev = self.dataset.next_batch_real(WGAN.max_summary_images)
-        z = self.dataset.next_batch_fake(WGAN.max_summary_images, self.z_size)
-        eta = np.random.rand(WGAN.max_summary_images, 1, 1, 1)
+    #     :param sess:
+    #     :param step:
+    #     :param writer:
+    #     :param timer:
+    #     :return:
+        
+        data_batch, data_batch_prev = self.dataset.next_batch_real(64)
+        batch_z = np.random.normal(0, 1, [64, self.z_size]) \
+                        .astype(np.float32)
+        eta = np.random.rand(64, 1, 1, 1)
+        
+       # z = self.dataset.next_batch_fake(WGAN.max_summary_images, self.z_size)
+       # eta = np.random.rand(WGAN.max_summary_images, 1, 1, 1)
+
+        
 
         summary = sess.run(self.merged, feed_dict={
-                           self.real_image: data_batch, self.z: z, self.eta: eta})
+                          self.real_image: data_batch, self.z: batch_z, self.eta: eta, self.prev_image : data_batch_prev})
         writer.add_summary(summary, step)
         print("\rSummary generated. Step", step,
               " Time == %.2fs" % timer.time())
